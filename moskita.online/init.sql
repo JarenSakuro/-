@@ -1,0 +1,83 @@
+CREATE TABLE IF NOT EXISTS pages (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  slug VARCHAR(50) NOT NULL UNIQUE,
+  title VARCHAR(200) NOT NULL,
+  body MEDIUMTEXT NOT NULL,
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS albums (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  title VARCHAR(200) NOT NULL,
+  description TEXT NULL,
+  cover_photo_id INT UNSIGNED NULL,
+  sort_order INT NOT NULL DEFAULT 0,
+  is_published TINYINT(1) NOT NULL DEFAULT 1,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS tags (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(50) NOT NULL UNIQUE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS photos (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  album_id INT UNSIGNED NOT NULL,
+  file_path VARCHAR(255) NOT NULL,
+  thumb_path VARCHAR(255) NULL,
+  description TEXT NULL,
+  shot_date DATE NULL,
+  sort_order INT NOT NULL DEFAULT 0,
+  is_published TINYINT(1) NOT NULL DEFAULT 1,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_album (album_id),
+  INDEX idx_shot_date (shot_date),
+  CONSTRAINT fk_photos_album
+    FOREIGN KEY (album_id) REFERENCES albums(id)
+    ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS photo_tags (
+  photo_id INT UNSIGNED NOT NULL,
+  tag_id INT UNSIGNED NOT NULL,
+  PRIMARY KEY (photo_id, tag_id),
+  CONSTRAINT fk_photo_tags_photo
+    FOREIGN KEY (photo_id) REFERENCES photos(id)
+    ON DELETE CASCADE,
+  CONSTRAINT fk_photo_tags_tag
+    FOREIGN KEY (tag_id) REFERENCES tags(id)
+    ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS timeline_items (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  photo_id INT UNSIGNED NOT NULL,
+  title VARCHAR(200) NOT NULL,
+  excerpt VARCHAR(500) NULL,
+  event_date DATE NOT NULL,
+  same_day_order INT NOT NULL DEFAULT 0,
+  is_published TINYINT(1) NOT NULL DEFAULT 1,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_event_date (event_date),
+  CONSTRAINT fk_timeline_photo
+    FOREIGN KEY (photo_id) REFERENCES photos(id)
+    ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS news_links (
+  id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  title VARCHAR(300) NOT NULL,
+  source_name VARCHAR(100) NULL,
+  url VARCHAR(500) NOT NULL,
+  cover_photo_url VARCHAR(500) NULL,
+  publish_date DATE NULL,
+  sort_order INT NOT NULL DEFAULT 0,
+  is_published TINYINT(1) NOT NULL DEFAULT 1,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 默认简介页（你后续可在后台改；现在先保证 about.php 有内容可读）
+INSERT INTO pages (slug, title, body)
+VALUES ('about', '阮鸿简介', '<p>这里是阮鸿简介内容。请在数据库 pages 表中编辑。</p>')
+ON DUPLICATE KEY UPDATE title=VALUES(title);
